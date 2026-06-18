@@ -1,0 +1,20 @@
+{
+  "name": "sadu-backend",
+  "version": "1.0.0",
+  "description": "Backend del Sistema Administrativo Documental Unificado - SADU",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mysql2": "^3.22.5",
+    "nodemon": "^3.1.14"
+  }
+}
