@@ -6,13 +6,15 @@ import {
     modificarUsuario,
     eliminarUsuario
 } from '../controllers/index.js'
+import { autenticar, autorizar } from '../middlewares/autenticacion.js'
 
 const router = Router()
 
-router.post('/usuario',       insertarUsuario)
-router.get('/usuario',        consultarUsuarios)
-router.get('/usuario/:id',    consultarUsuario)
-router.patch('/usuario/:id',  modificarUsuario)
-router.delete('/usuario/:id', eliminarUsuario)
+// La gestión de usuarios queda restringida al rol Administrador
+router.post('/usuario',       autenticar, autorizar('Administrador'), insertarUsuario)
+router.get('/usuario',        autenticar, autorizar('Administrador'), consultarUsuarios)
+router.get('/usuario/:id',    autenticar, autorizar('Administrador'), consultarUsuario)
+router.patch('/usuario/:id',  autenticar, autorizar('Administrador'), modificarUsuario)
+router.delete('/usuario/:id', autenticar, autorizar('Administrador'), eliminarUsuario)
 
 export default router
