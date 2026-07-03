@@ -30,9 +30,14 @@ CREATE TABLE IF NOT EXISTS documento (
 );
 
 -- Datos de prueba - usuarios
+-- Las contraseñas se almacenan cifradas con bcrypt (factor de costo 10):
+--   admin@sanantonio.gov.co    -> Admin123*
+--   aperez@sanantonio.gov.co   -> Func123*
+--   consulta@sanantonio.gov.co -> Consulta123*
 INSERT INTO usuario (nombre, email, rol, password) VALUES
-('Administrador SADU', 'admin@sanantonio.gov.co', 'Administrador', '1234'),
-('Ana Pérez', 'aperez@sanantonio.gov.co', 'Funcionario', '1234');
+('Administrador SADU', 'admin@sanantonio.gov.co', 'Administrador', '$2b$10$AXiJ4FFRjZ0/Ke/rqDPoMuKg72UErOMmRkRc4xzrS5oT3c/3CU3TW'),
+('Ana Pérez', 'aperez@sanantonio.gov.co', 'Funcionario', '$2b$10$fsb7ht/l0RCgI8u5K4YCdew8LRLqkYeAXsMWk5vEIjkE.ATK.cE3u'),
+('Consulta Ciudadana', 'consulta@sanantonio.gov.co', 'Consulta', '$2b$10$EyDFqDIEJAVydjJY64lPy.niIwRYgJJJyS46AvHVjVjNuuFoOk9FK');
 
 -- Datos de prueba - documentos
 INSERT INTO documento (radicado, titulo, tipo, estado, dependencia, fecha_registro, usuario_id) VALUES
