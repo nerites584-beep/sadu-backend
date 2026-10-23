@@ -1,5 +1,6 @@
 import { pool } from '../config/db/basedatos.js'
 import { validarDocumento } from '../utils/validaciones.js'
+import { rutaArchivo, borrarArchivo } from '../config/archivos.js'
 
 export const insertarDocumento = async (req, res) => {
     try {
@@ -76,12 +77,57 @@ export const modificarDocumento = async (req, res) => {
 export const eliminarDocumento = async (req, res) => {
     try {
         const { id } = req.params
+        const [rows] = await pool.query(`SELECT archivo FROM documento WHERE id = ?`, [id])
         const [result] = await pool.query(`DELETE FROM documento WHERE id = ?`, [id])
         if (result.affectedRows === 0) {
             return res.status(404).json({ mensaje: 'Documento no encontrado' })
         }
+        borrarArchivo(rows[0]?.archivo)
         res.json({ mensaje: 'Documento eliminado correctamente' })
     } catch (error) {
         res.status(500).json({ mensaje: 'Error al eliminar documento', error: error.message })
+    }
+}
+
+// Adjunta o reemplaza el PDF de un documento (el archivo ya fue validado por el middleware subirPdf)
+export const guardarArchivo = async (req, res) => {
+    try {
+        const { id } = req.params
+        const [rows] = await pool.query(`SELECT archivo FROM documento WHERE id = ?`, [id])
+        if (rows.length === 0) {
+            borrarArchivo(req.file.filename)
+            return res.status(404).json({ mensaje: 'Documento no encontrado' })
+        }
+
+        await pool.query(
+            `UPDATE documento SET archivo = ?, archivo_nombre = ? WHERE id = ?`,
+            [req.file.filename, req.file.originalname, id]
+        )
+        borrarArchivo(rows[0].archivo)
+        res.json({ mensaje: 'Archivo PDF cargado correctamente' })
+    } catch (error) {
+        borrarArchivo(req.file?.filename)
+        res.status(500).json({ mensaje: 'Error al guardar el archivo', error: error.message })
+    }
+}
+
+export const descargarArchivo = async (req, res) => {
+    try {
+        const { id } = req.params
+        const [rows] = await pool.query(`SELECT radicado, archivo, archivo_nombre FROM documento WHERE id = ?`, [id])
+        if (rows.length === 0 || !rows[0].archivo) {
+            return res.status(404).json({ mensaje: 'El documento no tiene un archivo PDF cargado' })
+        }
+
+        const nombre = rows[0].archivo_nombre || `${rows[0].radicado}.pdf`
+        res.setHeader('Content-Type', 'application/pdf')
+        res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(nombre)}`)
+        res.sendFile(rutaArchivo(rows[0].archivo), (error) => {
+            if (error && !res.headersSent) {
+                res.status(404).json({ mensaje: 'No se encontró el archivo PDF en el servidor' })
+            }
+        })
+    } catch (error) {
+        res.status(500).json({ mensaje: 'Error al consultar el archivo', error: error.message })
     }
 }

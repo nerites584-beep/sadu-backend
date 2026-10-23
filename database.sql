@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS documento (
     dependencia     VARCHAR(150) NOT NULL,
     fecha_registro  DATE         NOT NULL,
     usuario_id      INT,
+    archivo         VARCHAR(255) NULL,   -- nombre del PDF guardado en el servidor
+    archivo_nombre  VARCHAR(255) NULL,   -- nombre original con el que se subió
     FOREIGN KEY (usuario_id) REFERENCES usuario(id)
 );
 
