@@ -30,10 +30,11 @@ export const construirFiltroDocumentos = (query = {}) => {
         aplicados.estado = estado
     }
 
-    for (const campo of ['tipo', 'dependencia']) {
+    // Tipo y dependencia se filtran por el nombre del catálogo
+    for (const [campo, columna] of [['tipo', 't.nombre'], ['dependencia', 'dp.nombre']]) {
         const valor = texto(query[campo])
         if (valor) {
-            condiciones.push(`d.${campo} = ?`)
+            condiciones.push(`${columna} = ?`)
             params.push(valor)
             aplicados[campo] = valor
         }
