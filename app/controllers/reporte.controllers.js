@@ -1,15 +1,15 @@
 import { pool } from '../config/db/basedatos.js'
+import { SELECT_DOCUMENTOS } from '../config/db/consultas.js'
 import { construirFiltroDocumentos } from '../utils/filtros.js'
-import { resumirDocumentos, generarCsv } from '../utils/reportes.js'
+import { resumirDocumentos, generarCsv, describirFiltros } from '../utils/reportes.js'
 import { generarPdf } from '../utils/reportePdf.js'
+import { registrarAuditoria, ACCIONES } from '../utils/auditoria.js'
 
 // Consulta los documentos que cumplen los filtros de la URL
 export const buscarDocumentos = async (query) => {
     const { where, params, aplicados } = construirFiltroDocumentos(query)
     const [rows] = await pool.query(
-        `SELECT d.*, u.nombre AS usuario_nombre
-         FROM documento d
-         LEFT JOIN usuario u ON u.id = d.usuario_id
+        `${SELECT_DOCUMENTOS}
          ${where}
          ORDER BY d.fecha_registro DESC, d.id DESC`,
         params
@@ -35,6 +35,11 @@ export const exportarReporte = async (req, res) => {
         // Fecha de hoy en Colombia (el servidor de Railway trabaja en UTC)
         const fecha = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date())
         const nombre = `reporte-documentos-sadu-${fecha}.${formato}`
+
+        await registrarAuditoria({
+            usuario: req.usuario, accion: ACCIONES.EXPORTAR, entidad: 'reporte',
+            detalle: `${formato.toUpperCase()} · ${documentos.length} documento(s) · ${describirFiltros(aplicados)}`
+        })
 
         res.setHeader('Content-Disposition', `attachment; filename="${nombre}"`)
 
