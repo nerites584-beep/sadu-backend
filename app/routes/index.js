@@ -3,6 +3,8 @@ import authRoutes from './auth.routes.js'
 import documentoRoutes from './documento.routes.js'
 import usuarioRoutes from './usuario.routes.js'
 import reporteRoutes from './reporte.routes.js'
+import catalogoRoutes from './catalogo.routes.js'
+import auditoriaRoutes from './auditoria.routes.js'
 import { pool } from '../config/db/basedatos.js'
 
 const router = Router()
@@ -21,5 +23,7 @@ router.use(authRoutes)
 router.use(documentoRoutes)
 router.use(usuarioRoutes)
 router.use(reporteRoutes)
+router.use(catalogoRoutes)
+router.use(auditoriaRoutes)
 
 export default router

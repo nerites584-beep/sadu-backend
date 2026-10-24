@@ -1,6 +1,7 @@
 import { pool } from '../config/db/basedatos.js'
 import { hashearPassword } from '../utils/seguridad.js'
 import { validarUsuario } from '../utils/validaciones.js'
+import { registrarAuditoria, ACCIONES } from '../utils/auditoria.js'
 
 export const insertarUsuario = async (req, res) => {
     try {
@@ -16,6 +17,10 @@ export const insertarUsuario = async (req, res) => {
             `INSERT INTO usuario (nombre, email, rol, password) VALUES (?, ?, ?, ?)`,
             [nombre.trim(), email.trim(), rol, passwordHash]
         )
+        await registrarAuditoria({
+            usuario: req.usuario, accion: ACCIONES.CREAR, entidad: 'usuario',
+            entidadId: result.insertId, detalle: `${email.trim()} · rol ${rol}`
+        })
         res.status(201).json({ mensaje: 'Usuario creado correctamente', id: result.insertId })
     } catch (error) {
         if (error.code === 'ER_DUP_ENTRY') {
@@ -65,6 +70,10 @@ export const modificarUsuario = async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).json({ mensaje: 'Usuario no encontrado' })
         }
+        await registrarAuditoria({
+            usuario: req.usuario, accion: ACCIONES.EDITAR, entidad: 'usuario',
+            entidadId: Number(id), detalle: `${email.trim()} · rol ${rol}`
+        })
         res.json({ mensaje: 'Usuario actualizado correctamente' })
     } catch (error) {
         res.status(500).json({ mensaje: 'Error al modificar usuario', error: error.message })
@@ -89,10 +98,15 @@ export const eliminarUsuario = async (req, res) => {
             })
         }
 
+        const [[eliminado]] = await pool.query(`SELECT email FROM usuario WHERE id = ?`, [id])
         const [result] = await pool.query(`DELETE FROM usuario WHERE id = ?`, [id])
         if (result.affectedRows === 0) {
             return res.status(404).json({ mensaje: 'Usuario no encontrado' })
         }
+        await registrarAuditoria({
+            usuario: req.usuario, accion: ACCIONES.ELIMINAR, entidad: 'usuario',
+            entidadId: Number(id), detalle: eliminado?.email
+        })
         res.json({ mensaje: 'Usuario eliminado correctamente' })
     } catch (error) {
         if (error.code === 'ER_ROW_IS_REFERENCED_2') {
