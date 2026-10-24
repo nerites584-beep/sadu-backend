@@ -74,12 +74,30 @@ export const modificarUsuario = async (req, res) => {
 export const eliminarUsuario = async (req, res) => {
     try {
         const { id } = req.params
+        if (Number(id) === Number(req.usuario?.id)) {
+            return res.status(400).json({ mensaje: 'No puede eliminar su propio usuario mientras tiene la sesión iniciada' })
+        }
+
+        // Un usuario responsable de documentos no se borra: se perdería la trazabilidad del radicado
+        const [[{ total }]] = await pool.query(
+            `SELECT COUNT(*) AS total FROM documento WHERE usuario_id = ?`, [id]
+        )
+        if (total > 0) {
+            return res.status(409).json({
+                mensaje: `No se puede eliminar el usuario porque es responsable de ${total} documento(s). ` +
+                         'Si ya no debe radicar ni editar documentos, cambie su rol a Consulta.'
+            })
+        }
+
         const [result] = await pool.query(`DELETE FROM usuario WHERE id = ?`, [id])
         if (result.affectedRows === 0) {
             return res.status(404).json({ mensaje: 'Usuario no encontrado' })
         }
         res.json({ mensaje: 'Usuario eliminado correctamente' })
     } catch (error) {
+        if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+            return res.status(409).json({ mensaje: 'No se puede eliminar el usuario porque tiene documentos asociados' })
+        }
         res.status(500).json({ mensaje: 'Error al eliminar usuario', error: error.message })
     }
 }
