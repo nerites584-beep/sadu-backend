@@ -75,4 +75,14 @@ export const validarLogin = ({ email, password } = {}) => {
     return errores
 }
 
-export { ROLES_VALIDOS, ESTADOS_VALIDOS }
+// Regla de negocio: un documento Archivado o Anulado está cerrado.
+// Su trámite terminó y se conserva como evidencia, así que solo el
+// Administrador puede modificarlo o reabrirlo (y queda en la auditoría).
+const ESTADOS_CERRADOS = ['Archivado', 'Anulado']
+
+export const esDocumentoCerrado = (estado) => ESTADOS_CERRADOS.includes(estado)
+
+export const puedeModificarDocumento = (estadoActual, rol) =>
+    rol === 'Administrador' || ((rol === 'Funcionario') && !esDocumentoCerrado(estadoActual))
+
+export { ROLES_VALIDOS, ESTADOS_VALIDOS, ESTADOS_CERRADOS }
