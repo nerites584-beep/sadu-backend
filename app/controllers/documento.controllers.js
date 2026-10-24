@@ -1,6 +1,6 @@
 import { pool } from '../config/db/basedatos.js'
 import { SELECT_DOCUMENTOS } from '../config/db/consultas.js'
-import { validarDocumento } from '../utils/validaciones.js'
+import { validarDocumento, esDocumentoCerrado, puedeModificarDocumento } from '../utils/validaciones.js'
 import { rutaArchivo, borrarArchivo } from '../config/archivos.js'
 import { registrarAuditoria, ACCIONES } from '../utils/auditoria.js'
 import { buscarDocumentos } from './reporte.controllers.js'
@@ -15,6 +15,11 @@ const resolverCatalogos = async (tipo, dependencia) => {
     if (!tipoDoc) errores.push('El tipo de documento no existe en el catálogo o está inactivo')
     if (!dep) errores.push('La dependencia no existe en el catálogo o está inactiva')
     return { tipoId: tipoDoc?.id, dependenciaId: dep?.id, errores }
+}
+
+const respuestaDocumentoCerrado = (estado) => {
+    const mensaje = `Documento cerrado (${estado}): solo el Administrador puede modificarlo`
+    return { mensaje, errores: [mensaje] }
 }
 
 export const insertarDocumento = async (req, res) => {
@@ -84,6 +89,9 @@ export const modificarDocumento = async (req, res) => {
         if (!anterior) {
             return res.status(404).json({ mensaje: 'Documento no encontrado' })
         }
+        if (!puedeModificarDocumento(anterior.estado, req.usuario.rol)) {
+            return res.status(403).json(respuestaDocumentoCerrado(anterior.estado))
+        }
 
         // Un tipo o dependencia que se desactivó después se puede conservar al editar
         const catalogos = await resolverCatalogos(tipo, dependencia)
@@ -100,9 +108,10 @@ export const modificarDocumento = async (req, res) => {
         )
 
         const cambioEstado = anterior.estado !== estado ? ` · estado ${anterior.estado} → ${estado}` : ''
+        const cerrado = esDocumentoCerrado(anterior.estado) ? ' · documento cerrado' : ''
         await registrarAuditoria({
             usuario: req.usuario, accion: ACCIONES.EDITAR, entidad: 'documento',
-            entidadId: Number(id), detalle: `Radicado ${anterior.radicado}${cambioEstado}`
+            entidadId: Number(id), detalle: `Radicado ${anterior.radicado}${cambioEstado}${cerrado}`
         })
         res.json({ mensaje: 'Documento actualizado correctamente' })
     } catch (error) {
@@ -133,10 +142,14 @@ export const eliminarDocumento = async (req, res) => {
 export const guardarArchivo = async (req, res) => {
     try {
         const { id } = req.params
-        const [rows] = await pool.query(`SELECT archivo FROM documento WHERE id = ?`, [id])
+        const [rows] = await pool.query(`SELECT archivo, estado FROM documento WHERE id = ?`, [id])
         if (rows.length === 0) {
             borrarArchivo(req.file.filename)
             return res.status(404).json({ mensaje: 'Documento no encontrado' })
+        }
+        if (!puedeModificarDocumento(rows[0].estado, req.usuario.rol)) {
+            borrarArchivo(req.file.filename)
+            return res.status(403).json(respuestaDocumentoCerrado(rows[0].estado))
         }
 
         await pool.query(
