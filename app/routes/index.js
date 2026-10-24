@@ -2,6 +2,7 @@ import { Router } from 'express'
 import authRoutes from './auth.routes.js'
 import documentoRoutes from './documento.routes.js'
 import usuarioRoutes from './usuario.routes.js'
+import reporteRoutes from './reporte.routes.js'
 import { pool } from '../config/db/basedatos.js'
 
 const router = Router()
@@ -19,5 +20,6 @@ router.get('/salud', async (req, res) => {
 router.use(authRoutes)
 router.use(documentoRoutes)
 router.use(usuarioRoutes)
+router.use(reporteRoutes)
 
 export default router

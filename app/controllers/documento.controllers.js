@@ -1,6 +1,7 @@
 import { pool } from '../config/db/basedatos.js'
 import { validarDocumento } from '../utils/validaciones.js'
 import { rutaArchivo, borrarArchivo } from '../config/archivos.js'
+import { buscarDocumentos } from './reporte.controllers.js'
 
 export const insertarDocumento = async (req, res) => {
     try {
@@ -24,15 +25,11 @@ export const insertarDocumento = async (req, res) => {
     }
 }
 
+// GET /documento — acepta filtros opcionales: ?q=&estado=&tipo=&dependencia=&desde=&hasta=
 export const consultarDocumentos = async (req, res) => {
     try {
-        const [rows] = await pool.query(
-            `SELECT d.*, u.nombre AS usuario_nombre
-             FROM documento d
-             LEFT JOIN usuario u ON u.id = d.usuario_id
-             ORDER BY d.fecha_registro DESC`
-        )
-        res.json(rows)
+        const { documentos } = await buscarDocumentos(req.query)
+        res.json(documentos)
     } catch (error) {
         res.status(500).json({ mensaje: 'Error al consultar documentos', error: error.message })
     }
