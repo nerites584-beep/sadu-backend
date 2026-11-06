@@ -2,6 +2,7 @@ import { pool } from '../config/db/basedatos.js'
 import { hashearPassword } from '../utils/seguridad.js'
 import { validarUsuario } from '../utils/validaciones.js'
 import { registrarAuditoria, ACCIONES } from '../utils/auditoria.js'
+import { responderError } from '../utils/errores.js'
 
 export const insertarUsuario = async (req, res) => {
     try {
@@ -26,7 +27,7 @@ export const insertarUsuario = async (req, res) => {
         if (error.code === 'ER_DUP_ENTRY') {
             return res.status(409).json({ mensaje: 'Ya existe un usuario con ese email' })
         }
-        res.status(500).json({ mensaje: 'Error al insertar usuario', error: error.message })
+        responderError(res, 'Error al insertar usuario', error)
     }
 }
 
@@ -35,7 +36,7 @@ export const consultarUsuarios = async (req, res) => {
         const [rows] = await pool.query(`SELECT id, nombre, email, rol FROM usuario`)
         res.json(rows)
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error al consultar usuarios', error: error.message })
+        responderError(res, 'Error al consultar usuarios', error)
     }
 }
 
@@ -50,7 +51,7 @@ export const consultarUsuario = async (req, res) => {
         }
         res.json(rows[0])
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error al consultar usuario', error: error.message })
+        responderError(res, 'Error al consultar usuario', error)
     }
 }
 
@@ -76,7 +77,7 @@ export const modificarUsuario = async (req, res) => {
         })
         res.json({ mensaje: 'Usuario actualizado correctamente' })
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error al modificar usuario', error: error.message })
+        responderError(res, 'Error al modificar usuario', error)
     }
 }
 
@@ -112,6 +113,6 @@ export const eliminarUsuario = async (req, res) => {
         if (error.code === 'ER_ROW_IS_REFERENCED_2') {
             return res.status(409).json({ mensaje: 'No se puede eliminar el usuario porque tiene documentos asociados' })
         }
-        res.status(500).json({ mensaje: 'Error al eliminar usuario', error: error.message })
+        responderError(res, 'Error al eliminar usuario', error)
     }
 }

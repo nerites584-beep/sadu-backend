@@ -4,6 +4,7 @@ import { validarDocumento, esDocumentoCerrado, puedeModificarDocumento } from '.
 import { rutaArchivo, borrarArchivo } from '../config/archivos.js'
 import { registrarAuditoria, ACCIONES } from '../utils/auditoria.js'
 import { buscarDocumentos } from './reporte.controllers.js'
+import { responderError } from '../utils/errores.js'
 
 // Convierte los nombres de tipo y dependencia que llegan del formulario
 // en los identificadores de los catálogos. Solo se aceptan valores activos.
@@ -49,7 +50,7 @@ export const insertarDocumento = async (req, res) => {
         if (error.code === 'ER_DUP_ENTRY') {
             return res.status(409).json({ mensaje: 'Ya existe un documento con ese radicado' })
         }
-        res.status(500).json({ mensaje: 'Error al insertar documento', error: error.message })
+        responderError(res, 'Error al insertar documento', error)
     }
 }
 
@@ -59,7 +60,7 @@ export const consultarDocumentos = async (req, res) => {
         const { documentos } = await buscarDocumentos(req.query)
         res.json(documentos)
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error al consultar documentos', error: error.message })
+        responderError(res, 'Error al consultar documentos', error)
     }
 }
 
@@ -72,7 +73,7 @@ export const consultarDocumento = async (req, res) => {
         }
         res.json(rows[0])
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error al consultar documento', error: error.message })
+        responderError(res, 'Error al consultar documento', error)
     }
 }
 
@@ -115,7 +116,7 @@ export const modificarDocumento = async (req, res) => {
         })
         res.json({ mensaje: 'Documento actualizado correctamente' })
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error al modificar documento', error: error.message })
+        responderError(res, 'Error al modificar documento', error)
     }
 }
 
@@ -134,7 +135,7 @@ export const eliminarDocumento = async (req, res) => {
         })
         res.json({ mensaje: 'Documento eliminado correctamente' })
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error al eliminar documento', error: error.message })
+        responderError(res, 'Error al eliminar documento', error)
     }
 }
 
@@ -164,7 +165,7 @@ export const guardarArchivo = async (req, res) => {
         res.json({ mensaje: 'Archivo PDF cargado correctamente' })
     } catch (error) {
         borrarArchivo(req.file?.filename)
-        res.status(500).json({ mensaje: 'Error al guardar el archivo', error: error.message })
+        responderError(res, 'Error al guardar el archivo', error)
     }
 }
 
@@ -185,6 +186,6 @@ export const descargarArchivo = async (req, res) => {
             }
         })
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error al consultar el archivo', error: error.message })
+        responderError(res, 'Error al consultar el archivo', error)
     }
 }

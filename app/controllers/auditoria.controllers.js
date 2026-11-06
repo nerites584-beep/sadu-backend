@@ -1,5 +1,6 @@
 import { pool } from '../config/db/basedatos.js'
 import { ACCIONES } from '../utils/auditoria.js'
+import { responderError } from '../utils/errores.js'
 
 const POR_PAGINA = 50
 const REGEX_FECHA = /^\d{4}-\d{2}-\d{2}$/
@@ -48,6 +49,6 @@ export const consultarAuditoria = async (req, res) => {
             acciones: Object.values(ACCIONES)
         })
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error al consultar la auditoría', error: error.message })
+        responderError(res, 'Error al consultar la auditoría', error)
     }
 }

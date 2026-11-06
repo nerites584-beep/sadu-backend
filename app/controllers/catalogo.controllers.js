@@ -1,5 +1,6 @@
 import { pool } from '../config/db/basedatos.js'
 import { registrarAuditoria, ACCIONES } from '../utils/auditoria.js'
+import { responderError } from '../utils/errores.js'
 
 // Las dos tablas de catálogo comparten estructura; solo cambia el nombre de la columna "activo"
 const CATALOGOS = {
@@ -24,7 +25,7 @@ export const consultarCatalogos = async (req, res) => {
         )
         res.json({ dependencias: dependencias.map(aBooleano), tipos: tipos.map(aBooleano) })
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error al consultar los catálogos', error: error.message })
+        responderError(res, 'Error al consultar los catálogos', error)
     }
 }
 
@@ -50,7 +51,7 @@ export const insertarCatalogo = async (req, res) => {
         if (error.code === 'ER_DUP_ENTRY') {
             return res.status(409).json({ mensaje: `${catalogo.etiqueta} "${nombre}" ya existe` })
         }
-        res.status(500).json({ mensaje: 'Error al guardar en el catálogo', error: error.message })
+        responderError(res, 'Error al guardar en el catálogo', error)
     }
 }
 
@@ -74,6 +75,6 @@ export const cambiarEstadoCatalogo = async (req, res) => {
         })
         res.json({ mensaje: `${catalogo.etiqueta} quedó ${activo ? 'activo' : 'inactivo'}` })
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error al actualizar el catálogo', error: error.message })
+        responderError(res, 'Error al actualizar el catálogo', error)
     }
 }

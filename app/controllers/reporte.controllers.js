@@ -4,6 +4,7 @@ import { construirFiltroDocumentos } from '../utils/filtros.js'
 import { resumirDocumentos, generarCsv, describirFiltros } from '../utils/reportes.js'
 import { generarPdf } from '../utils/reportePdf.js'
 import { registrarAuditoria, ACCIONES } from '../utils/auditoria.js'
+import { responderError } from '../utils/errores.js'
 
 // Consulta los documentos que cumplen los filtros de la URL
 export const buscarDocumentos = async (query) => {
@@ -23,7 +24,7 @@ export const consultarReporte = async (req, res) => {
         const { documentos, aplicados } = await buscarDocumentos(req.query)
         res.json({ filtros: aplicados, ...resumirDocumentos(documentos) })
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error al generar el reporte', error: error.message })
+        responderError(res, 'Error al generar el reporte', error)
     }
 }
 
@@ -52,7 +53,7 @@ export const exportarReporte = async (req, res) => {
         generarPdf(documentos, resumirDocumentos(documentos), aplicados, req.usuario, res)
     } catch (error) {
         if (!res.headersSent) {
-            res.status(500).json({ mensaje: 'Error al exportar el reporte', error: error.message })
+            responderError(res, 'Error al exportar el reporte', error)
         }
     }
 }
