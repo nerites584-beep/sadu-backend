@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename)
 const entorno = process.env.NODE_ENV || 'developer'
 
 dotenv.config({
-    path: path.join(__dirname, `../../environments/${entorno}.env`)
+    path: path.join(__dirname, `../environments/${entorno}.env`)
 })
 
 export const pool = createPool({
