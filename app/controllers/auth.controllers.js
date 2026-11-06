@@ -3,6 +3,7 @@ import { verificarPassword, generarToken } from '../utils/seguridad.js'
 import { validarLogin } from '../utils/validaciones.js'
 import { limitadorLogin } from '../utils/limiteIntentos.js'
 import { registrarAuditoria, ACCIONES } from '../utils/auditoria.js'
+import { responderError } from '../utils/errores.js'
 
 // POST /login — autentica al usuario y devuelve un token JWT
 export const login = async (req, res) => {
@@ -59,6 +60,6 @@ export const login = async (req, res) => {
         await registrarAuditoria({ usuario, accion: ACCIONES.INICIO_SESION, entidad: 'sesion', detalle: `Rol ${usuario.rol}` })
         res.json({ mensaje: 'Autenticación exitosa', token, usuario })
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error en el proceso de autenticación', error: error.message })
+        responderError(res, 'Error en el proceso de autenticación', error)
     }
 }
